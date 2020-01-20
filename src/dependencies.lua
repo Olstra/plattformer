@@ -23,6 +23,7 @@ require 'src/constants'
 require 'src/Player'
 require 'src/Tile'
 require 'src/Level'
+require 'src/Animation'
 
 
 gTextures = {
@@ -44,3 +45,11 @@ gFrames = {
 -- these need to be added after gFrames is initialized because they refer to gFrames from within
 gFrames['tile_sets'] = GenerateTileSets( gFrames['tiles'], TILE_SETS_WIDE, TILE_SETS_TALL, TILE_SET_W, TILE_SET_H )
 gFrames['topper_sets'] = GenerateTileSets( gFrames['toppers'], TOPPER_SETS_WIDE, TOPPER_SETS_TALL, TILE_SET_W, TILE_SET_H )
+
+
+gFonts = {
+    ['small'] = love.graphics.newFont('fonts/font.ttf', 8),
+    ['medium'] = love.graphics.newFont('fonts/font.ttf', 16),
+    ['large'] = love.graphics.newFont('fonts/font.ttf', 32),
+    ['title'] = love.graphics.newFont('fonts/ArcadeAlternate.ttf', 32)
+}

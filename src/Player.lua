@@ -24,29 +24,50 @@ function Player:init(def)
     self.texture = def.texture
 
     self.speed = 100
-    self.jump_vel = -75
+    self.jump_vel = -150
 
     self.direction = 'right'
 
-    self.states = {'idle', 'moving', 'jumping', 'falling'}
+    --self.states = {'idle', 'moving', 'jumping', 'falling'}
 
     self.curr_state = 'idle'
 
     -- reference to the world map
     self.map = def.map
 
+    self.alive = true
+
+    self.animation = def.animation
+
 end
 
 
 function Player:update(dt)
 
-    if not(self:collidesBottom()) then
-        self.y = self.y + 3
+    self.animation:update(dt)
+
+    if not(self:collidesBottom()) or self.curr_state == 'jumping' then
+        -- check for lower edge of screen
+        if self.y+self.h < VIRTUAL_H then
+            self.dy = self.dy + GRAVITY
+            self.y = self.y + self.dy * dt
+        else
+            self.y = VIRTUAL_H - self.h
+            self.animation = ani_idle
+            self.alive = false
+        end
+    end
+
+    if self:collidesBottom() then
+        self.curr_state = 'idle'
+        self.animation = ani_idle
     end
 
     if love.keyboard.isDown('space') then
         if self:collidesBottom() then
-            player.y = player.y + player.jump_vel
+            player.dy = player.jump_vel
+            self.curr_state = 'jumping'
+            self.animation = ani_jump
         end
     end
 
@@ -55,12 +76,25 @@ function Player:update(dt)
         if not(self:collidesRight()) then
             self.x = self.x + self.speed * dt
             self.direction = 'right'
+            self.animation = ani_moving
         end
     elseif love.keyboard.isDown('left') then
         if not(self:collidesLeft()) then
             self.x = self.x - self.speed * dt -- update position
             self.direction = 'left'
+            self.animation = ani_moving
         end
+    end
+
+    -- constrain player X no matter which state
+    if self.x <= 0 then
+        self.x = 0
+    elseif self.x > TILE_SIZE * #self.map[1] - self.w then
+        self.x = TILE_SIZE * #self.map[1]- self.w
+    elseif self.y <= 0 then
+        self.y = 0
+    elseif self.y > TILE_SIZE * #self.map - self.h then
+        self.y = TILE_SIZE * #self.map - self.h
     end
     
 end
@@ -70,9 +104,10 @@ function Player:render()
     local x_pos = math.floor(self.x / TILE_SIZE)
     local y_pos = math.floor(self.y / TILE_SIZE)
 
+
     love.graphics.draw( 
         gTextures[self.texture], 
-        gFrames[self.texture][1],
+        gFrames[self.texture][self.animation:getCurrentFrame()],
         math.floor(self.x) + 8, 
         math.floor(self.y) + 10, 
         0, 
@@ -92,9 +127,10 @@ function Player:collidesUp()
     end
 end
 
--- kinda works... but not perfectly
-function Player:collidesBottom()
 
+-- kinda works... but not perfectly (1 tile-w gaps...)
+function Player:collidesBottom()
+    -- handles collision with lava
 
     local x = 0
     local y = 0 
@@ -111,7 +147,11 @@ function Player:collidesBottom()
     y = math.min( y +1, max_y )
     x = math.min( x, max_x )
 
-    if self.map[y][x]['id'] == ID_GROUND then
+    if self.map[y][x]['collidable'] then
+        if self.map[y][x]['deadly'] then
+            self.alive = false
+        end
+
         return true
     end
 
@@ -124,7 +164,11 @@ function Player:collidesBottom()
     y = math.min( y +1, max_y )
     x = math.min( x, max_x )
 
-    if self.map[y][x]['id'] == ID_GROUND then
+    if self.map[y][x]['collidable'] then
+        if self.map[y][x]['deadly'] then
+            self.alive = false
+        end
+
         return true
     end
 
@@ -141,21 +185,21 @@ function Player:collidesRight()
     local y = 0
 
     -- get position of upper right corner
-    y = math.floor( self.y / TILE_SIZE ) + 1 -- +1 cause lua 1 indexed
+    y = math.max(1, math.floor( self.y / TILE_SIZE ) ) -- we never want a value bellow 0
     y = (y < max_y) and y or max_y -- safety check
 
-    x = math.floor( (self.x + self.w) / TILE_SIZE ) + 1
+    x = math.max(1, math.floor( (self.x + self.w) / TILE_SIZE ) )
     x = (x < max_x) and x or max_x
 
     -- check if player overlaps with solid tile
-    if self.map[y][x]['id'] == ID_GROUND then
+    if self.map[y][x]['collidable'] then
         return true
     end
 
     -- check lower right corner
     y = math.max( 1, math.floor( (self.y + self.h) / TILE_SIZE ) )
 
-    if self.map[y][x]['id'] == ID_GROUND then
+    if self.map[y][x]['collidable'] then
         return true
     end
 
@@ -171,14 +215,14 @@ function Player:collidesLeft()
     local y = 0
 
     -- get position of upper left corner
-    y = math.floor( self.y / TILE_SIZE ) + 1
+    y = math.max(1, math.floor( self.y / TILE_SIZE ) )
     y = (y < max_y) and y or max_y
 
-    x = math.floor( self.x / TILE_SIZE ) + 1
+    x = math.max(1, math.floor( self.x / TILE_SIZE ) )
     x = (x < max_x) and x or max_x
 
     -- check for overlap
-    if self.map[y][x]['id'] == ID_GROUND then
+    if self.map[y][x]['collidable'] then
         return true
     end
 
@@ -186,7 +230,7 @@ function Player:collidesLeft()
     y = math.max(1, math.floor( (self.y + self.h) / TILE_SIZE ) )
     y = (y < max_y) and y or max_y
 
-    if self.map[y][x]['id'] == ID_GROUND then
+    if self.map[y][x]['collidable'] then
         return true
     end
 

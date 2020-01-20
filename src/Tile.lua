@@ -18,6 +18,10 @@ function Tile:init(def) -- TODO re-add parameter topper, topperset, tileset
     self.tileset = 1
 
     self.topper = def.topper
+
+    self.collidable = def.collidable
+
+    self.deadly = false
     --self.topperset = topperset
 end
 
@@ -41,15 +45,6 @@ function Tile:render()
         (self.x - 1) * TILE_SIZE, 
         (self.y - 1) * TILE_SIZE
     )
-    
-    -- tile top layer for graphical variety
-   --[[  if self.topper then
-        love.graphics.draw(
-            gTextures['toppers'], 
-            gFrames['toppersets'][self.topperset][self.id],
-            (self.x - 1) * TILE_SIZE, 
-            (self.y - 1) * TILE_SIZE)
-    end ]]
 end
 
 

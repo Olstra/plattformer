@@ -5,16 +5,16 @@
     as a part of 'edx course CS50g'
 ]]
 
-level_map = { 
-    "---------------------------------------------",
-    "---------------------------------------------",
-    "---------------------------------------------",
-    "---------------------------------------------",
-    "-------##------------------------------------",
-    "-----------##--------------------------------",
-    "#-###########################################",
-    "#############################################",
-    "#############################################"
+map_txt = { 
+    "------------------------------------------------------",
+    "------------------------------------------------------",
+    "------------------------------------------------------",
+    "------------------------------------------------------",
+    "--------------------------####------------------------",
+    "-----###-----##---------#####-------------------------",
+    "####------######-############kkkk#--kkkkkkkkkkkk--####",
+    "####kkkkkk######-#################----------------####",
+    "################-#####################################",
 }
 
 
@@ -22,12 +22,12 @@ Level = Class{}
 
 
 function Level:init()
-    self.tiles = generateLevel(level_map)
+    self.map = generateLevel(map_txt)
 end
 
 
 function Level:render()
-    local xxx = self.tiles
+    local xxx = self.map
     local tile = nil
 
     for row = 1, #xxx do
@@ -39,7 +39,7 @@ function Level:render()
                 -- draw tiles
                 love.graphics.draw( 
                     gTextures['tiles'], 
-                    gFrames['tile_sets'][1][ID_GROUND],
+                    gFrames['tile_sets'][5][ID_GROUND],
                     tile.x, tile.y 
                 )
 
@@ -51,16 +51,23 @@ function Level:render()
                         tile.x, tile.y 
                     )
                 end
-            end
+            elseif tile['id'] == ID_LAVA then
+                -- draw tiles
+                love.graphics.draw( 
+                    gTextures['tiles'], 
+                    gFrames['tile_sets'][5][ID_GROUND],
+                    tile.x, tile.y 
+                )
 
-                -- add toppers
-                --[[ if level_map[row-1]:sub(col,col) == '-' then
+                -- add toppers (=lava)
+                if tile['topper'] then
                     love.graphics.draw( 
                         gTextures['toppers'], 
-                        gFrames['topper_sets'][1][ID_GROUND],
-                        x_pos, y_pos 
+                        gFrames['topper_sets'][79][ID_GROUND],
+                        tile.x, tile.y 
                     )
-                end ]]      
+                end
+            end    
 
         end
     end
@@ -89,33 +96,41 @@ function generateLevel(map)
 
             temp = map[row]:sub(col,col)
 
+            -- calculate position
             y_pos = (row > 1) and (row-1)*TILE_SIZE or 0
             x_pos = (col > 1) and (col-1)*TILE_SIZE or 0
 
-            if temp == '#' then
-                
+            if temp == '#' then                
                 -- find out if we need a topper
                 temp_y = (row-1 > 1) and row-1 or 1
                 temp = map[temp_y]:sub(col,col) == '-'
 
                 tile = Tile{
                     id = ID_GROUND,
-                    x = x_pos,
-                    y = y_pos,
+                    collidable = true,
                     topper = temp
                 }
                 
             elseif temp == '-' then
                 tile = Tile{
-                    id = ID_SKY,
-                    x = x_pos,
-                    y = y_pos,  
-                    topper = false                  
+                    id = ID_SKY,  
+                    topper = false,
+                    collidable = false                 
                 }
+            elseif temp == 'k' then -- LAVA
+                tile = Tile{
+                    id = ID_LAVA,
+                    collidable = true,
+                    topper = 'true'
+                }
+                tile.deadly = true
             else
                 print('ERROR, ivalid chara in map!')
                 return -1
             end
+
+            tile.x = x_pos
+            tile.y = y_pos
 
             table.insert(level[row], tile)
         end
@@ -123,3 +138,4 @@ function generateLevel(map)
 
     return level
 end
+------------------------------
