@@ -9,33 +9,39 @@ Player = Class{}
 
 
 function Player:init(def)
+
+    -- defaults
+
+    -- dimensions
+    self.w = CHARA_W
+    self.h = CHARA_H
+
     -- position
-    self.x = def.x
-    self.y = def.y
+    -- set at creation of level, in generateLevel()
+    self.x = def.x --CHARA_H
+    self.y = def.y --FLOOR_H * TILE_SIZE - CHARA_H
 
     -- velocity
     self.dx = 0
     self.dy = 0
 
-    -- dimensions
-    self.w = def.w
-    self.h = def.h
-
-    self.texture = def.texture
-
     self.speed = 100
+    
     self.jump_vel = -150
+
+    self.alive = true
+
+    self.texture = 'player'
 
     self.direction = 'right'
 
-    --self.states = {'idle', 'moving', 'jumping', 'falling'}
-
     self.curr_state = 'idle'
 
-    -- reference to the world map
-    self.map = def.map
+    self.score = 0
 
-    self.alive = true
+
+    -- set at runtime
+    self.map = def.map    
 
     self.animation = def.animation
 
@@ -108,14 +114,33 @@ function Player:render()
     love.graphics.draw( 
         gTextures[self.texture], 
         gFrames[self.texture][self.animation:getCurrentFrame()],
-        math.floor(self.x) + 8, 
-        math.floor(self.y) + 10, 
+        math.floor(self.x) + CHARA_W/2, 
+        math.floor(self.y) + CHARA_H/2, 
         0, 
         self.direction == 'right' and 1 or -1, 
         1, 8, 10
     )
 end
 
+
+function Player:reset()
+    self.alive = true
+    self.curr_state = 'idle'
+    self.score = 0
+
+   -- position
+   self.x = s_player_x
+   self.y = s_player_y
+
+   -- re-generate level 
+   level.map = level:generateLevel(map_txt)
+
+   --repoint map reference of player to new map
+   self.map = level.map
+
+   gSounds['death']:stop()
+   gSounds['music']:play()
+end
 
 -- COLLISION DETECTION----------
 
@@ -150,6 +175,14 @@ function Player:collidesBottom()
     if self.map[y][x]['collidable'] then
         if self.map[y][x]['deadly'] then
             self.alive = false
+        elseif self.map[y][x]['id'] == ID_EXIT then
+                self.curr_state = 'finish'
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
         end
 
         return true
@@ -167,6 +200,14 @@ function Player:collidesBottom()
     if self.map[y][x]['collidable'] then
         if self.map[y][x]['deadly'] then
             self.alive = false
+        elseif self.map[y][x]['id'] == ID_EXIT then
+                self.curr_state = 'finish'
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
         end
 
         return true
@@ -193,6 +234,16 @@ function Player:collidesRight()
 
     -- check if player overlaps with solid tile
     if self.map[y][x]['collidable'] then
+        if self.map[y][x]['id'] == ID_EXIT then
+            self.curr_state = 'finish'
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
+        end
+
         return true
     end
 
@@ -200,6 +251,16 @@ function Player:collidesRight()
     y = math.max( 1, math.floor( (self.y + self.h) / TILE_SIZE ) )
 
     if self.map[y][x]['collidable'] then
+        if self.map[y][x]['id'] == ID_EXIT then
+            self.curr_state = 'finish'
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
+        end
+
         return true
     end
 
@@ -223,6 +284,16 @@ function Player:collidesLeft()
 
     -- check for overlap
     if self.map[y][x]['collidable'] then
+        if self.map[y][x]['id'] == ID_EXIT then
+            self.curr_state = 'finish'
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
+        end
+
         return true
     end
 
@@ -231,6 +302,16 @@ function Player:collidesLeft()
     y = (y < max_y) and y or max_y
 
     if self.map[y][x]['collidable'] then
+        if self.map[y][x]['id'] == ID_EXIT then
+            self.curr_state = 'finish'
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
+        end
+        
         return true
     end
 

@@ -24,6 +24,7 @@ require 'src/Player'
 require 'src/Tile'
 require 'src/Level'
 require 'src/Animation'
+require 'src/level_layout'
 
 
 gTextures = {
@@ -31,7 +32,11 @@ gTextures = {
     ['toppers'] = love.graphics.newImage('graphics/tile_tops.png'),
     ['backgrounds'] = love.graphics.newImage('graphics/backgrounds.png'),
     
-    ['player'] = love.graphics.newImage('graphics/player.png')
+    ['player'] = love.graphics.newImage('graphics/player.png'),
+
+    ['cookie'] = love.graphics.newImage('graphics/cookie.png'),
+
+    ['exit'] = love.graphics.newImage('graphics/ladders_and_signs.png')
 }
 
 gFrames = {
@@ -39,7 +44,12 @@ gFrames = {
     ['toppers'] = GenerateQuads(gTextures['toppers'], TILE_SIZE, TILE_SIZE),
     ['backgrounds'] = GenerateQuads(gTextures['backgrounds'], 256, 128),
 
-    ['player'] = GenerateQuads(gTextures['player'], CHARA_W, CHARA_H)
+    ['player'] = GenerateQuads(gTextures['player'], CHARA_W, CHARA_H),
+
+    ['cookie'] = GenerateQuads(gTextures['cookie'], COOKIE_W, COOKIE_W),
+
+    ['exit'] = GenerateQuads(gTextures['exit'], SIGN_W, SIGN_H)
+
 }
 
 -- these need to be added after gFrames is initialized because they refer to gFrames from within
@@ -52,4 +62,16 @@ gFonts = {
     ['medium'] = love.graphics.newFont('fonts/font.ttf', 16),
     ['large'] = love.graphics.newFont('fonts/font.ttf', 32),
     ['title'] = love.graphics.newFont('fonts/ArcadeAlternate.ttf', 32)
+}
+
+
+gSounds = {
+    ['jump'] = love.audio.newSource('sounds/jump.wav', 'static'),
+    ['death'] = love.audio.newSource('sounds/death.wav', 'static'),
+    ['music'] = love.audio.newSource('sounds/music.wav', 'static'),
+    ['powerup-reveal'] = love.audio.newSource('sounds/powerup-reveal.wav', 'static'),
+    ['pickup'] = love.audio.newSource('sounds/pickup.wav', 'static'),
+    ['empty-block'] = love.audio.newSource('sounds/empty-block.wav', 'static'),
+    ['kill'] = love.audio.newSource('sounds/kill.wav', 'static'),
+    ['kill2'] = love.audio.newSource('sounds/kill2.wav', 'static')
 }

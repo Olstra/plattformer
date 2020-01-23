@@ -35,19 +35,25 @@ TOPPER_SETS_TALL = 18
 ID_GROUND = 3
 ID_SKY = 5
 ID_LAVA = 0
+ID_EXIT = 30
 
 SOLID = {ID_GROUND, ID_LAVA}
 
-MAP_H = VIRTUAL_H / TILE_SIZE
-MAP_W = 100
+--MAP_H = VIRTUAL_H / TILE_SIZE
+--MAP_W = 100
 
-FLOOR_H = MAP_H * 2/3
+--FLOOR_H = MAP_H * 2/3
 
+-- cookie
+COOKIE_W = 10
 
--- character 
+-- sign (exit)
+SIGN_W = 16
+SIGN_H = 16
+
+-- character
 CHARA_W = 16
 CHARA_H = 20
 
---JUMP_VEL = -150 -- minus so we jump 'up'
 GRAVITY = 10
 -----------------------------

@@ -22,7 +22,6 @@ function Tile:init(def) -- TODO re-add parameter topper, topperset, tileset
     self.collidable = def.collidable
 
     self.deadly = false
-    --self.topperset = topperset
 end
 
 --[[

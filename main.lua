@@ -19,6 +19,11 @@ function love.load()
         vsync = true
     })
 
+    -- Music
+    gSounds['music']:setLooping(true)
+    gSounds['music']:setVolume(0.5)
+    gSounds['music']:play()
+
     -- ANIMATION FRAMES
 
     ani_idle = Animation {
@@ -34,24 +39,14 @@ function love.load()
         interval = 1
     }
 
-    --ani_current = ani_idle
-
     cam_scroll = 0
 
     level = Level{}
 
     player = Player{
-        -- dimensions
-        w = CHARA_W,
-        h = CHARA_H,
 
-        -- position
-        x = CHARA_H,
-        y = FLOOR_H * TILE_SIZE - CHARA_H,
-
-        texture = 'player',
-
-        direction = 'right',
+        x = s_player_x,
+        y = s_player_y,
 
         map = level.map,
 
@@ -62,21 +57,28 @@ end
 
 
 --function love.resize(w, h)
---    push:resize(w, h)
+ --   push:resize(w, h)
 --end
 
 
 function love.keypressed(key)
     if key == 'escape' then
         love.event.quit()
+    elseif key == 'return' then
+        if not(player.alive) or player.curr_state == 'finish' then
+            player:reset()
+        end
     end
 end
 
 
 function love.update(dt)
 
-    if player.alive then
+    if player.alive and player.curr_state ~= 'finish' then
         player:update(dt)
+    elseif not(player.alive) then
+        gSounds['music']:stop()
+        gSounds['death']:play()
     end
 
     -- cam clamping
@@ -100,13 +102,11 @@ function love.draw()
         gTextures['backgrounds'], 
         gFrames['backgrounds'][1], 
         math.floor(-bg_x), 0)
-
     love.graphics.draw(
         gTextures['backgrounds'], 
         gFrames['backgrounds'][1], 
         math.floor(-bg_x),
         gTextures['backgrounds']:getHeight() / 3 * 2, 0, 1, -1)
-
     love.graphics.draw(
         gTextures['backgrounds'], 
         gFrames['backgrounds'][1], 
@@ -119,12 +119,29 @@ function love.draw()
         gTextures['backgrounds']:getHeight() / 3 * 2, 0, 1, -1)
     ---------------------
 
+    -- player finished level
+    if player.curr_state == 'finish' then
+        love.graphics.setColor(0, 100, 0, 255)
+        love.graphics.setFont(gFonts['medium'])
+        love.graphics.print("YOU WIN!", VIRTUAL_W/3, VIRTUAL_H/4)
+
+        love.graphics.setFont(gFonts['small'])
+        love.graphics.print("\n\nRESTART: [enter]\nQUIT: [esc]", VIRTUAL_W/3, VIRTUAL_H/4)
+    end
+
     -- game over
     if not(player.alive) then
         love.graphics.setColor(100, 0, 0, 255)
         love.graphics.setFont(gFonts['medium'])
         love.graphics.print("GAME OVER", VIRTUAL_W/3, VIRTUAL_H/4)
+
+        love.graphics.setFont(gFonts['small'])
+        love.graphics.print("\n\nRESTART: [enter]\nQUIT: [esc]", VIRTUAL_W/3, VIRTUAL_H/4)
     end
+
+    -- player score
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.print("SCORE: ".. player.score, 5, 5)
 
     love.graphics.translate(-math.floor(cam_scroll), 0) -- translate using int (floor), else blur
 

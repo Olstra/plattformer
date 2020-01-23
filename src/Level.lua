@@ -5,24 +5,12 @@
     as a part of 'edx course CS50g'
 ]]
 
-map_txt = { 
-    "------------------------------------------------------",
-    "------------------------------------------------------",
-    "------------------------------------------------------",
-    "------------------------------------------------------",
-    "--------------------------####------------------------",
-    "-----###-----##---------#####-------------------------",
-    "####------######-############kkkk#--kkkkkkkkkkkk--####",
-    "####kkkkkk######-#################----------------####",
-    "################-#####################################",
-}
-
 
 Level = Class{}
 
 
 function Level:init()
-    self.map = generateLevel(map_txt)
+    self.map = self:generateLevel(map_txt)    
 end
 
 
@@ -66,7 +54,21 @@ function Level:render()
                         gFrames['topper_sets'][79][ID_GROUND],
                         tile.x, tile.y 
                     )
-                end
+                end                
+            elseif tile['id'] == ID_EXIT then
+                -- draw 'exit' sign for level end
+                love.graphics.draw(
+                    gTextures['exit'], 
+                    gFrames['exit'][ID_EXIT],
+                    tile.x, tile.y 
+                )
+            elseif tile['id'] == 'cookie' then
+                -- draw cookies
+                love.graphics.draw(
+                    gTextures['cookie'], 
+                    gFrames['cookie'][1],
+                    tile.x+3, tile.y +6
+                )
             end    
 
         end
@@ -75,14 +77,14 @@ end
 
 
 ------------------------------
-function generateLevel(map)
+function Level:generateLevel(map)
 
     if #map == 0 then
-        print("ups! problem with level map!")
+        print("ERROR: problem with level map!")
         return -1
     end
 
-    level = {}
+    local level = {}
     local temp_id = nil
     local temp_y = nil
 
@@ -103,7 +105,8 @@ function generateLevel(map)
             if temp == '#' then                
                 -- find out if we need a topper
                 temp_y = (row-1 > 1) and row-1 or 1
-                temp = map[temp_y]:sub(col,col) == '-'
+                bla = map[temp_y]:sub(col,col)
+                temp = bla == '-' or bla == 'T' or bla == 'X' or bla == 'O'
 
                 tile = Tile{
                     id = ID_GROUND,
@@ -124,6 +127,23 @@ function generateLevel(map)
                     topper = 'true'
                 }
                 tile.deadly = true
+            elseif temp == 'T' then
+                tile = Tile{
+                    id = ID_EXIT,
+                    collidable = true
+                }
+            elseif temp == 'X' then
+                s_player_x = tile.x + CHARA_W
+                s_player_y = tile.y - CHARA_H/2
+
+                tile = Tile {
+                    id = 'id_player'
+                }
+            elseif temp == 'O' then
+                tile = Tile {
+                    id = 'cookie',
+                    collidable = true
+                }
             else
                 print('ERROR, ivalid chara in map!')
                 return -1
