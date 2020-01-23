@@ -98,9 +98,8 @@ function Level:generateLevel(map)
 
             temp = map[row]:sub(col,col)
 
-            -- calculate position
-            y_pos = (row > 1) and (row-1)*TILE_SIZE or 0
-            x_pos = (col > 1) and (col-1)*TILE_SIZE or 0
+            y_pos = (row-1)*TILE_SIZE
+            x_pos = (col-1)*TILE_SIZE
 
             if temp == '#' then                
                 -- find out if we need a topper
@@ -133,8 +132,8 @@ function Level:generateLevel(map)
                     collidable = true
                 }
             elseif temp == 'X' then
-                s_player_x = tile.x + CHARA_W
-                s_player_y = tile.y - CHARA_H/2
+                s_player_x = x_pos --tile.x-- + CHARA_W
+                s_player_y = y_pos --tile.y-- - CHARA_H/2
 
                 tile = Tile {
                     id = 'id_player'

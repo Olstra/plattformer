@@ -25,9 +25,9 @@ function Player:init(def)
     self.dx = 0
     self.dy = 0
 
-    self.speed = 100
+    self.speed = 90
     
-    self.jump_vel = -150
+    self.jump_vel = -190
 
     self.alive = true
 
@@ -49,18 +49,18 @@ end
 
 
 function Player:update(dt)
-
+    
     self.animation:update(dt)
 
     if not(self:collidesBottom()) or self.curr_state == 'jumping' then
         -- check for lower edge of screen
-        if self.y+self.h < VIRTUAL_H then
+        if self.y + self.h < VIRTUAL_H then
             self.dy = self.dy + GRAVITY
             self.y = self.y + self.dy * dt
         else
             self.y = VIRTUAL_H - self.h
-            self.animation = ani_idle
             self.alive = false
+            self.animation = ani_idle
         end
     end
 
@@ -69,6 +69,7 @@ function Player:update(dt)
         self.animation = ani_idle
     end
 
+    
     if love.keyboard.isDown('space') then
         if self:collidesBottom() then
             player.dy = player.jump_vel
@@ -91,8 +92,8 @@ function Player:update(dt)
             self.animation = ani_moving
         end
     end
-
-    -- constrain player X no matter which state
+    
+    -- constrain player X/Y no matter which state
     if self.x <= 0 then
         self.x = 0
     elseif self.x > TILE_SIZE * #self.map[1] - self.w then
@@ -107,18 +108,15 @@ end
 
 
 function Player:render()
-    local x_pos = math.floor(self.x / TILE_SIZE)
-    local y_pos = math.floor(self.y / TILE_SIZE)
-
-
     love.graphics.draw( 
         gTextures[self.texture], 
         gFrames[self.texture][self.animation:getCurrentFrame()],
-        math.floor(self.x) + CHARA_W/2, 
-        math.floor(self.y) + CHARA_H/2, 
+        math.floor(self.x) +CHARA_W/2, -- use floor so no blur
+        math.floor(self.y) +CHARA_H/2,
         0, 
-        self.direction == 'right' and 1 or -1, 
-        1, 8, 10
+        self.direction == 'left' and -1 or 1,
+        1,
+        CHARA_W/2, CHARA_H/2
     )
 end
 
@@ -145,38 +143,47 @@ end
 -- COLLISION DETECTION----------
 
 function Player:collidesUp()
-    -- test when player is in this state:
-    -- jumping
-    
-    if self.curr_state == 'jumping' then
-    end
+    -- TODO...
 end
 
 
 -- kinda works... but not perfectly (1 tile-w gaps...)
 function Player:collidesBottom()
     -- handles collision with lava
+    -- if next tile = solid -> collision 
 
     local x = 0
     local y = 0 
     local max_x = #self.map[1]
     local max_y = #self.map
+    
+    -- check collision with tile underneath player
 
-    -- if next tile = solid -> collision    
+    -- calculate index of the tile player is in currently
+    local curr_tile_x = math.floor(self.x / TILE_SIZE)
 
-    -- get position of lower left corner
-    y = math.max( 1, math.floor( (self.y + self.h) / TILE_SIZE ) )
-    x = math.max( 1, math.floor( (self.x + self.w) / TILE_SIZE ) ) -- add w so gameplay mor intuitive
+    y = math.max( 1, math.floor( self.y / TILE_SIZE ) + 1 ) -- lua is 1 idxed, so we never want a value <1
+    -- get next tile under player (without IOB)
+    y = math.min( y + 1, max_y )
 
-    -- get next tile (without IOB)
-    y = math.min( y +1, max_y )
-    x = math.min( x, max_x )
+    x = math.max( 1, math.floor( self.x / TILE_SIZE ) )
+    
+    if self.direction == 'right' then
+        x = math.min(x+1, max_x) -- check next tile instead
+    else
+        x = math.min(x+2, max_x)
+    end
 
+
+    -- collision detection
     if self.map[y][x]['collidable'] then
+
         if self.map[y][x]['deadly'] then
             self.alive = false
+
         elseif self.map[y][x]['id'] == ID_EXIT then
                 self.curr_state = 'finish'
+                
         elseif self.map[y][x]['id'] == 'cookie' then
             self.map[y][x]['id'] = ID_SKY
             self.map[y][x]['collidable'] = false
@@ -187,33 +194,8 @@ function Player:collidesBottom()
 
         return true
     end
-
-
-    -- get position of lower right corner        
-    y = math.max( 1, math.floor( (self.y + self.h) / TILE_SIZE ) )
-    x = math.max( 1, math.floor( (self.x + self.w + self.w/2) / TILE_SIZE ) )
-
-    -- get next tile (without IOB)
-    y = math.min( y +1, max_y )
-    x = math.min( x, max_x )
-
-    if self.map[y][x]['collidable'] then
-        if self.map[y][x]['deadly'] then
-            self.alive = false
-        elseif self.map[y][x]['id'] == ID_EXIT then
-                self.curr_state = 'finish'
-        elseif self.map[y][x]['id'] == 'cookie' then
-            self.map[y][x]['id'] = ID_SKY
-            self.map[y][x]['collidable'] = false
-            gSounds['pickup']:play()
-            
-            self.score = self.score + 1
-        end
-
-        return true
-    end
-
-    return false    
+    
+    return false  
     
 end
 
@@ -226,16 +208,17 @@ function Player:collidesRight()
     local y = 0
 
     -- get position of upper right corner
-    y = math.max(1, math.floor( self.y / TILE_SIZE ) ) -- we never want a value bellow 0
+    y = math.max(1, math.floor( self.y / TILE_SIZE ) +1) -- we never want a value bellow 0
     y = (y < max_y) and y or max_y -- safety check
 
-    x = math.max(1, math.floor( (self.x + self.w) / TILE_SIZE ) )
-    x = (x < max_x) and x or max_x
+    x = math.max(1, math.floor( self.x / TILE_SIZE )+1 ) -- +1 cause lua indxed
+    x = (x+1 < max_x) and x+1 or max_x -- +1 cause we check tile to the right
 
-    -- check if player overlaps with solid tile
     if self.map[y][x]['collidable'] then
+
         if self.map[y][x]['id'] == ID_EXIT then
             self.curr_state = 'finish'
+
         elseif self.map[y][x]['id'] == 'cookie' then
             self.map[y][x]['id'] = ID_SKY
             self.map[y][x]['collidable'] = false
@@ -247,74 +230,41 @@ function Player:collidesRight()
         return true
     end
 
-    -- check lower right corner
-    y = math.max( 1, math.floor( (self.y + self.h) / TILE_SIZE ) )
-
-    if self.map[y][x]['collidable'] then
-        if self.map[y][x]['id'] == ID_EXIT then
-            self.curr_state = 'finish'
-        elseif self.map[y][x]['id'] == 'cookie' then
-            self.map[y][x]['id'] = ID_SKY
-            self.map[y][x]['collidable'] = false
-            gSounds['pickup']:play()
-            
-            self.score = self.score + 1
-        end
-
-        return true
-    end
-
-    return false
+    return false 
 end
 
 
 function Player:collidesLeft()
-        
+     
     local max_x = #self.map[1]
-    local max_y = #self.map
+    local max_y = #self.map        
     local x = 0
     local y = 0
 
-    -- get position of upper left corner
-    y = math.max(1, math.floor( self.y / TILE_SIZE ) )
-    y = (y < max_y) and y or max_y
+    -- get position of upper right corner
+    y = math.max(1, math.floor( self.y / TILE_SIZE ) +1) -- we never want a value bellow 0
+    y = (y < max_y) and y or max_y -- safety check
 
-    x = math.max(1, math.floor( self.x / TILE_SIZE ) )
-    x = (x < max_x) and x or max_x
-
-    -- check for overlap
-    if self.map[y][x]['collidable'] then
-        if self.map[y][x]['id'] == ID_EXIT then
-            self.curr_state = 'finish'
-        elseif self.map[y][x]['id'] == 'cookie' then
-            self.map[y][x]['id'] = ID_SKY
-            self.map[y][x]['collidable'] = false
-            gSounds['pickup']:play()
-            
-            self.score = self.score + 1
-        end
-
-        return true
-    end
-
-    -- check lower left corner
-    y = math.max(1, math.floor( (self.y + self.h) / TILE_SIZE ) )
-    y = (y < max_y) and y or max_y
+    x = math.max(1, math.floor( (self.x / TILE_SIZE ) +1)) -- +1 cause lua indxed
+    x = math.max(x, 1) -- +1 cause we check tile to the right
 
     if self.map[y][x]['collidable'] then
-        if self.map[y][x]['id'] == ID_EXIT then
-            self.curr_state = 'finish'
-        elseif self.map[y][x]['id'] == 'cookie' then
-            self.map[y][x]['id'] = ID_SKY
-            self.map[y][x]['collidable'] = false
-            gSounds['pickup']:play()
-            
-            self.score = self.score + 1
-        end
         
+        if self.map[y][x]['id'] == ID_EXIT then
+            self.curr_state = 'finish'
+
+        elseif self.map[y][x]['id'] == 'cookie' then
+            self.map[y][x]['id'] = ID_SKY
+            self.map[y][x]['collidable'] = false
+            gSounds['pickup']:play()
+            
+            self.score = self.score + 1
+        end
+
         return true
     end
 
     return false
+
 end
 --------------------------------

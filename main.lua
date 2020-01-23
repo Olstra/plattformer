@@ -45,6 +45,7 @@ function love.load()
 
     player = Player{
 
+        -- get right position from generateLevel()
         x = s_player_x,
         y = s_player_y,
 
@@ -123,20 +124,20 @@ function love.draw()
     if player.curr_state == 'finish' then
         love.graphics.setColor(0, 100, 0, 255)
         love.graphics.setFont(gFonts['medium'])
-        love.graphics.print("YOU WIN!", VIRTUAL_W/3, VIRTUAL_H/4)
+        love.graphics.print("YOU WIN!", math.floor(VIRTUAL_W/3), math.floor(VIRTUAL_H/4))
 
         love.graphics.setFont(gFonts['small'])
-        love.graphics.print("\n\nRESTART: [enter]\nQUIT: [esc]", VIRTUAL_W/3, VIRTUAL_H/4)
+        love.graphics.print("\n\nRESTART: [enter]\nQUIT: [esc]", math.floor(VIRTUAL_W/3), math.floor(VIRTUAL_H/4))
     end
 
     -- game over
     if not(player.alive) then
         love.graphics.setColor(100, 0, 0, 255)
         love.graphics.setFont(gFonts['medium'])
-        love.graphics.print("GAME OVER", VIRTUAL_W/3, VIRTUAL_H/4)
+        love.graphics.print("GAME OVER", math.floor(VIRTUAL_W/3), math.floor(VIRTUAL_H/4))
 
         love.graphics.setFont(gFonts['small'])
-        love.graphics.print("\n\nRESTART: [enter]\nQUIT: [esc]", VIRTUAL_W/3, VIRTUAL_H/4)
+        love.graphics.print("\n\nRESTART: [enter]\nQUIT: [esc]", math.floor(VIRTUAL_W/3), math.floor(VIRTUAL_H/4))
     end
 
     -- player score

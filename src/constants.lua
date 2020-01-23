@@ -55,5 +55,7 @@ SIGN_H = 16
 CHARA_W = 16
 CHARA_H = 20
 
-GRAVITY = 10
+MAX_LIVES = 3
+
+GRAVITY = 16
 -----------------------------
